@@ -1,0 +1,81 @@
+<odoo>
+ 	<data>
+		<!-- explicit list view definition -->
+
+		<record model="ir.ui.view" id="account_budget_profit_loss_report.list">
+			<field name="name">Budgetary Positions</field>
+		  	<field name="model">account.budget.fiscal.config</field>
+		  	<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<label for="fiscal_year_id"/>
+						<h1>
+							<field name="fiscal_year_id"/>
+						</h1>
+						<group>
+							<group>
+								<field name="currency_id"/>
+							</group>
+						</group>
+						<notebook>
+							<page string="Account Budgets">
+								<field name="budget_line">
+									<tree>
+										<field name="month"/>
+										<field name="year"/>
+										<field name="budget_subtotal"/>
+										<field name="currency_id" invisible="1"/>
+									</tree>
+									<form>
+										<group>
+											<group>
+												<field name="month"/>
+											</group>
+											<group>
+												<field name="year"/>
+											</group>
+										</group>
+										<notebook>
+											<page string="Accounts">
+												<field name="budget_account_line">
+													<tree editable="bottom">
+														<field name="account_id"/>
+														<field name="amount_budget"/>
+														<field name="currency_id" invisible="1"/>
+													</tree>
+												</field>
+											</page>
+										</notebook>
+										<group>
+											<group>
+											</group>
+											<group>
+												<field name="budget_subtotal"/>
+											</group>
+										</group>
+									</form>
+								</field>
+							</page>
+						</notebook>
+						<group>
+							<group>
+							</group>
+							<group>
+								<field name="budget_amount_total"/>
+							</group>
+						</group>
+					</sheet>
+				</form>
+		  	</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="account_budget_profit_loss_report.action_window">
+		  	<field name="name">Budgetary Positions</field>
+		  	<field name="res_model">account.budget.fiscal.config</field>
+		  	<field name="view_mode">tree,form</field>
+		</record>
+  
+		<menuitem name="Budgetary Position" id="account_budget_profit_loss_report.menu_1_list" parent="account.menu_finance_entries" action="account_budget_profit_loss_report.action_window"/>
+
+  </data>
+</odoo>
