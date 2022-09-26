@@ -21,7 +21,7 @@
 							<page string="Account Budgets">
 								<field name="budget_line">
 									<tree>
-										<field name="month" invisible="1"/>
+										<field name="month" invisible="0"/>
 										<field name="year" invisible="1"/>
 										<field name="budget_subtotal"/>
 										<field name="currency_id" invisible="1"/>
