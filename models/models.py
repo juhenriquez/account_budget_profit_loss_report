@@ -16,7 +16,7 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 
 
-MONTHS = [(str(i), calendar.month_name[i]) for i in range(1,13)]
+MONTHS = [(str(i), calendar.month_name[i]) for i in range(1,12)]
 YEARS = [(str(i), str(i)) for i in range(2000,2100)]
 
 def get_months_from_dates(date_from, date_to):
@@ -74,8 +74,8 @@ class BudgetAccountFiscalConfigLine(models.Model):
                 })
 
     budget_fiscal_config_id = fields.Many2one('account.budget.fiscal.config', string='Budget Config', required=True, ondelete='cascade', index=True, copy=False)
-    month = fields.Selection(MONTHS, "Month", required=True)
-    year = fields.Selection(YEARS, "Year", required=True)
+    month = fields.Selection(MONTHS, "Month",required=False)
+    year = fields.Selection(YEARS, "Year", required=False )
     budget_account_line = fields.One2many('account.budget.fiscal.account.line', 'config_line_id', string='Budget Lines', copy=True, auto_join=True)
     budget_subtotal = fields.Monetary("Budget Subtotal", compute="_compute_budget_subtotal")
     currency_id = fields.Many2one("res.currency", "Currency", related="budget_fiscal_config_id.currency_id")
