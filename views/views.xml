@@ -21,18 +21,18 @@
 							<page string="Account Budgets">
 								<field name="budget_line">
 									<tree>
-										<field name="month" invisible="0"/>
-										<field name="year" invisible="1"/>
+										<field name="month"/>
+										<field name="year"/>
 										<field name="budget_subtotal"/>
 										<field name="currency_id" invisible="1"/>
 									</tree>
 									<form>
 										<group>
 											<group>
-												<field name="month" invisible="0"/>
+												<field name="month"/>
 											</group>
 											<group>
-												<field name="year" invisible="1"/>
+												<field name="year"/>
 											</group>
 										</group>
 										<notebook>
