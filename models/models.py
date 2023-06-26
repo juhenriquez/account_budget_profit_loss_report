@@ -114,7 +114,10 @@ class ReportAccountFinancialReport(models.Model):
                 budget = self.env['account.budget.fiscal.account.line'].with_context(self._context)._get_budget_for_account(date_from, date_to, account_id=x.get('account_id'))
                 budget_formatted = formatLang(self.env, budget, currency_obj=self.env.company.currency_id)
                 report_val = x.get('columns')[0].get('no_format_name')
-                over_budget =  report_val - budget
+                if report_val and budget:
+                    over_budget =  report_val - budget
+                else:
+                    over_budget=0
                 over_budget_formatted = formatLang(self.env, over_budget, currency_obj=self.env.company.currency_id)
                 over_budget_percent = 0
                 if budget > 0:
