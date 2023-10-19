@@ -15,30 +15,29 @@ from dateutil.relativedelta import relativedelta
 from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 
+MONTHS = [(str(i), calendar.month_name[i]) for i in range(1, 13)]
+YEARS = [(str(i), str(i)) for i in range(2000, 2100)]
 
-MONTHS = [(str(i), calendar.month_name[i]) for i in range(1,13)]
-YEARS = [(str(i), str(i)) for i in range(2000,2100)]
 
 def get_months_from_dates(date_from, date_to):
     date1 = datetime.strptime(date_from, "%Y-%m-%d")
     date2 = datetime.strptime(date_to, "%Y-%m-%d")
-    date1 = date1.replace(day = 1)
-    date2 = date2.replace(day = 1)
+    date1 = date1.replace(day=1)
+    date2 = date2.replace(day=1)
     months_str = calendar.month_name
     months = []
-    while date1 < date2:
+    while date1 <= date2:
         month = date1.month
-        year  = date1.year
+        year = date1.year
         month_str = months_str[month][0:3]
-        months.append((str(month),str(year)))
-        next_month = month+1 if month != 12 else 1
+        months.append((str(month), str(year)))
+        next_month = month + 1 if month != 12 else 1
         next_year = year + 1 if next_month == 1 else year
-        date1 = date1.replace( month = next_month, year= next_year)
-
+        date1 = date1.replace(month=next_month, year=next_year)
     return months
 
-class BudgetAccountFiscalConfig(models.Model):
 
+class BudgetAccountFiscalConfig(models.Model):
     _name = "account.budget.fiscal.config"
     _rec_name = "fiscal_year_id"
 
@@ -50,17 +49,18 @@ class BudgetAccountFiscalConfig(models.Model):
                 budget_amount_total += line.budget_subtotal
 
             config.update({
-                    'budget_amount_total':budget_amount_total,
-                })
-
+                'budget_amount_total': budget_amount_total,
+            })
 
     fiscal_year_id = fields.Many2one("account.fiscal.year", "Fiscal Year", required=True)
-    budget_line = fields.One2many('account.budget.fiscal.config.line', 'budget_fiscal_config_id', string='Budget Lines', copy=True, auto_join=True)
-    budget_amount_total = fields.Monetary(string='Total Budget', store=True, readonly=True, tracking=4, compute="_compute_budget_amount_total")
+    budget_line = fields.One2many('account.budget.fiscal.config.line', 'budget_fiscal_config_id', string='Budget Lines',
+                                  copy=True, auto_join=True)
+    budget_amount_total = fields.Monetary(string='Total Budget', store=True, readonly=True, tracking=4,
+                                          compute="_compute_budget_amount_total")
     currency_id = fields.Many2one("res.currency", "Currency")
 
-class BudgetAccountFiscalConfigLine(models.Model):
 
+class BudgetAccountFiscalConfigLine(models.Model):
     _name = "account.budget.fiscal.config.line"
 
     @api.depends("budget_account_line.amount_budget")
@@ -70,21 +70,24 @@ class BudgetAccountFiscalConfigLine(models.Model):
             for line in config_line.budget_account_line:
                 budget_subtotal += line.amount_budget
             config_line.update({
-                    'budget_subtotal':budget_subtotal,
-                })
+                'budget_subtotal': budget_subtotal,
+            })
 
-    budget_fiscal_config_id = fields.Many2one('account.budget.fiscal.config', string='Budget Config', required=True, ondelete='cascade', index=True, copy=False)
+    budget_fiscal_config_id = fields.Many2one('account.budget.fiscal.config', string='Budget Config', required=True,
+                                              ondelete='cascade', index=True, copy=False)
     month = fields.Selection(MONTHS, "Month", required=True)
     year = fields.Selection(YEARS, "Year", required=True)
-    budget_account_line = fields.One2many('account.budget.fiscal.account.line', 'config_line_id', string='Budget Lines', copy=True, auto_join=True)
+    budget_account_line = fields.One2many('account.budget.fiscal.account.line', 'config_line_id', string='Budget Lines',
+                                          copy=True, auto_join=True)
     budget_subtotal = fields.Monetary("Budget Subtotal", compute="_compute_budget_subtotal")
     currency_id = fields.Many2one("res.currency", "Currency", related="budget_fiscal_config_id.currency_id")
 
-class BudgetAccountFiscalAccountConfigLine(models.Model):
 
+class BudgetAccountFiscalAccountConfigLine(models.Model):
     _name = "account.budget.fiscal.account.line"
 
-    config_line_id = fields.Many2one('account.budget.fiscal.config.line', string='Budget Config', required=True, ondelete='cascade', index=True, copy=False)
+    config_line_id = fields.Many2one('account.budget.fiscal.config.line', string='Budget Config', required=True,
+                                     ondelete='cascade', index=True, copy=False)
     account_id = fields.Many2one('account.account', required=True)
     currency_id = fields.Many2one("res.currency", "Currency", related="config_line_id.currency_id")
     amount_budget = fields.Monetary(string='Total', store=True, readonly=False, tracking=4)
@@ -93,7 +96,7 @@ class BudgetAccountFiscalAccountConfigLine(models.Model):
         budget = 0.0
         if not account_id:
             return budget
-        for account_line in self.search([('account_id','=', account_id)]):
+        for account_line in self.search([('account_id', '=', account_id)]):
             months_range = get_months_from_dates(date_from, date_to)
             config_line_id = account_line.config_line_id
             for ranges in months_range:
@@ -101,9 +104,9 @@ class BudgetAccountFiscalAccountConfigLine(models.Model):
                     budget += account_line.amount_budget
         return budget
 
+
 class ReportAccountFinancialReport(models.Model):
     _inherit = "account.financial.html.report"
-
 
     def _get_lines(self, options, line_id=None):
         res = super(ReportAccountFinancialReport, self)._get_lines(options=options, line_id=line_id)
@@ -111,28 +114,33 @@ class ReportAccountFinancialReport(models.Model):
             if x.get('account_id'):
                 date_from = self._context.get('date_from')
                 date_to = self._context.get('date_to')
-                budget = self.env['account.budget.fiscal.account.line'].with_context(self._context)._get_budget_for_account(date_from, date_to, account_id=x.get('account_id'))
+                budget = self.env['account.budget.fiscal.account.line'].with_context(
+                    self._context)._get_budget_for_account(date_from, date_to, account_id=x.get('account_id'))
                 budget_formatted = formatLang(self.env, budget, currency_obj=self.env.company.currency_id)
+
                 report_val = x.get('columns')[0].get('no_format_name')
                 if report_val and budget:
-                    over_budget =  report_val - budget
+                    over_budget = report_val - budget
+
                 else:
-                    over_budget=0
+                    over_budget = 0
                 over_budget_formatted = formatLang(self.env, over_budget, currency_obj=self.env.company.currency_id)
                 over_budget_percent = 0
-                if budget > 0:
+
+                if budget > 0 and report_val:
                     over_budget_percent = round((report_val / budget) * 100, 2)
-                x.get('columns').insert(0, {'name':budget_formatted, 'no_format_name':budget})
-                x.get('columns').append({'name':over_budget_formatted, 'no_format_name':over_budget_formatted})
-                x.get('columns').append({'name':"{} %".format(over_budget_percent), 'no_format_name':"{} %".format(over_budget_percent)})
+                x.get('columns').insert(0, {'name': budget_formatted, 'no_format_name': budget})
+                x.get('columns').append({'name': over_budget_formatted, 'no_format_name': over_budget_formatted})
+                x.get('columns').append(
+                    {'name': "{} %".format(over_budget_percent), 'no_format_name': "{} %".format(over_budget_percent)})
             else:
-                x.get('columns').insert(0, {'name':''})
-                x.get('columns').append({'name':''})
-                x.get('columns').append({'name':''})
+                x.get('columns').insert(0, {'name': ''})
+                x.get('columns').append({'name': ''})
+                x.get('columns').append({'name': ''})
         return res
 
     def _get_columns_name(self, options):
-        columns = [{'name': ''}, {'name':'Budget'}]
+        columns = [{'name': ''}, {'name': 'Budget'}]
         if self.debit_credit and not options.get('comparison', {}).get('periods', False):
             columns += [{'name': _('Debit'), 'class': 'number'}, {'name': _('Credit'), 'class': 'number'}]
         if not self.filter_date:
@@ -157,9 +165,10 @@ class ReportAccountFinancialReport(models.Model):
                         group_column_name += ' ' + column_name
                     columns_for_groups.append({'name': column.get('name') + group_column_name, 'class': 'number'})
             columns = columns[:1] + columns_for_groups
-        columns.append({'name':'Over Budget'})
-        columns.append({'name':"% of Budget"})
+        columns.append({'name': 'Over Budget'})
+        columns.append({'name': "% of Budget"})
         return columns
+
 
 class AccountFinancialReportLine(models.Model):
     _inherit = "account.financial.html.report.line"
@@ -179,7 +188,8 @@ class AccountFinancialReportLine(models.Model):
             for period in comparison_table:
                 date_from = period.get('date_from', False)
                 date_to = period.get('date_to', False) or period.get('date', False)
-                date_from, date_to, strict_range = line.with_context(date_from=date_from, date_to=date_to)._compute_date_range()
+                date_from, date_to, strict_range = line.with_context(date_from=date_from,
+                                                                     date_to=date_to)._compute_date_range()
 
                 r = line.with_context(date_from=date_from,
                                       date_to=date_to,
@@ -235,9 +245,11 @@ class AccountFinancialReportLine(models.Model):
                         'caret_options': groupby == 'account_id' and 'account.account' or groupby,
                         'financial_group_line_id': line.id,
                     }
-                    for account in self.env['account.account'].sudo().search([('company_id','=', self.env.company.id)]):
-                        if account.display_name == name:
-                            vals['account_id'] = account.id
+                    account_code = name.split(' ')
+                    account = self.env['account.account'].sudo().search([('company_id', '=', self.env.company.id),
+                                                                         ('code', '=', account_code[0])])
+                    if account:
+                        vals['account_id'] = account[0].id
 
                     if line.financial_report_id.name == 'Aged Receivable':
                         vals['trust'] = self.env['res.partner'].browse([domain_id]).trust
@@ -271,7 +283,8 @@ class AccountFinancialReportLine(models.Model):
                 if line.hide_if_zero and not line.formulas:
                     amounts_by_line = [[col['no_format_name'] for col in new_line['columns']] for new_line in new_lines]
                     amounts_by_column = zip(*amounts_by_line)
-                    all_columns_have_children_zero = all(float_is_zero(sum(col), precision_rounding=currency_precision) for col in amounts_by_column)
+                    all_columns_have_children_zero = all(
+                        float_is_zero(sum(col), precision_rounding=currency_precision) for col in amounts_by_column)
                     if all_columns_have_children_zero:
                         continue
                 if new_lines and line.formulas:
